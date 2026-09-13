@@ -1,0 +1,67 @@
+name: 缺陷报告
+description: 报告安装、移除、状态检查或运行时翻译问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请搜索现有 Issue。安全漏洞和包含敏感信息的问题请通过 Security Advisory 私下报告。
+  - type: input
+    id: app-version
+    attributes:
+      label: 软件名称和版本
+      placeholder: "Devin 1.126.0 / Cursor 3.18.9"
+    validations:
+      required: true
+  - type: input
+    id: agentzh-version
+    attributes:
+      label: agent-zh-cn 版本或提交号
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: 安装方式
+      options:
+        - 一键汉化.bat
+        - Python 脚本
+        - PowerShell 脚本
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请按顺序列出能够稳定复现问题的操作。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或截图
+      description: 请删除令牌、Cookie、账号、个人路径等敏感信息。

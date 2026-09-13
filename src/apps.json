@@ -1,0 +1,46 @@
+{
+  "cursor": {
+    "name": "Cursor",
+    "applicationNames": ["cursor"],
+    "windowsDirs": ["cursor", "Cursor"],
+    "macBundle": "Cursor",
+    "linuxDirs": ["cursor", "Cursor"],
+    "executables": ["Cursor.exe", "cursor", "Cursor"],
+    "cliNames": ["cursor"],
+    "userData": "Cursor",
+    "dataFolder": ".cursor"
+  },
+  "devin": {
+    "name": "Devin",
+    "applicationNames": ["devin-desktop"],
+    "windowsDirs": ["Devin"],
+    "macBundle": "Devin",
+    "linuxDirs": ["devin", "Devin", "devin-desktop"],
+    "executables": ["Devin.exe", "devin-desktop", "Devin"],
+    "cliNames": ["devin-desktop"],
+    "userData": "Devin",
+    "dataFolder": ".devin"
+  },
+  "windsurf": {
+    "name": "Windsurf",
+    "applicationNames": ["windsurf"],
+    "windowsDirs": ["Windsurf"],
+    "macBundle": "Windsurf",
+    "linuxDirs": ["windsurf", "Windsurf"],
+    "executables": ["Windsurf.exe", "windsurf", "Windsurf"],
+    "cliNames": ["windsurf"],
+    "userData": "Windsurf",
+    "dataFolder": ".windsurf"
+  },
+  "vscode": {
+    "name": "Visual Studio Code",
+    "applicationNames": ["code"],
+    "windowsDirs": ["Microsoft VS Code"],
+    "macBundle": "Visual Studio Code",
+    "linuxDirs": ["code", "vscode"],
+    "executables": ["Code.exe", "code", "Code"],
+    "cliNames": ["code"],
+    "userData": "Code",
+    "dataFolder": ".vscode"
+  }
+}

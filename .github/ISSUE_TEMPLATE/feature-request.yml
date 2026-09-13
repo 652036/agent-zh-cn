@@ -1,0 +1,28 @@
+name: 功能建议
+description: 建议与补充翻译、安装器或兼容性有关的改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请搜索现有 Issue，并确认建议属于本项目范围。目标软件的产品功能和账号问题应提交给对应厂商。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景
+      description: 请说明当前遇到的问题，以及该问题影响的用户或版本。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 请描述期望的行为或接口。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 其他方案
+      description: 如果尝试过替代方法，请说明结果。

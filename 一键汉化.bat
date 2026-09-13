@@ -1,0 +1,8 @@
+@echo off
+chcp 65001 >nul
+cd /d "%~dp0"
+echo Agent 汉化 - 安装界面翻译
+echo 请选择目标软件。操作前请保存工作，所选软件将关闭并重新启动。
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0AgentZh.ps1" -Cmd apply -Kill -Restart
+echo.
+pause

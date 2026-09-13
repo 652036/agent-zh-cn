@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+build/
+dist/
+*.spec
+.DS_Store
+Thumbs.db
+CursorZh.exe
+*.zip
+.idea/
+.vscode/
+*.log

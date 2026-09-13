@@ -1,0 +1,46 @@
+name: 漏翻文案
+description: 报告目标软件界面中尚未覆盖的英文文案
+title: "[漏翻] "
+labels: ["i18n"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先搜索现有 Issue。同一位置出现的相关文案可以合并报告。
+  - type: input
+    id: version
+    attributes:
+      label: 软件名称和版本
+      placeholder: "Devin 1.126.0 / Cursor 3.18.9"
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: 出现位置
+      placeholder: 设置 → Tab，或智能体消息队列菜单
+    validations:
+      required: true
+  - type: textarea
+    id: en
+    attributes:
+      label: 英文原文
+      description: 请尽量复制完整原文，并保留大小写、标点、快捷键和变量。
+    validations:
+      required: true
+  - type: textarea
+    id: zh
+    attributes:
+      label: 建议译文（可选）
+  - type: textarea
+    id: extra
+    attributes:
+      label: 截图或其他说明
+      description: 无法复制原文时可附截图。请先隐藏账号、路径和对话内容。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交确认
+      options:
+        - label: 我已搜索现有 Issue，且提交内容不包含敏感信息。
+          required: true

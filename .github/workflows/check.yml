@@ -1,0 +1,57 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: windows-latest
+            python: "3.12"
+          - os: macos-latest
+            python: "3.12"
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Check generated dictionary
+        run: python scripts/build_js.py --check
+      - name: Check JavaScript syntax
+        run: node --check agent-zh.js
+      - name: Check runtime content protection
+        run: node tests/runtime.test.cjs
+      - name: Validate JavaScript regular expressions
+        run: node -e "for (const f of ['zh-CN','common']) { const d=require('./locales/'+f+'.json'); for (const p of d.patterns) new RegExp(p.match) }"
+      - name: Parse PowerShell 5.1 script
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          foreach ($script in @("AgentZh.ps1", "CursorZh.ps1")) {
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $script), [ref]$tokens, [ref]$errors
+            ) > $null
+            if ($errors.Count) {
+              $errors | Format-List
+              exit 1
+            }
+          }
