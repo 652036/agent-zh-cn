@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Agent 汉化 and the legacy Cursor artifact from reviewed dictionaries."""
+"""从已审核词典生成 AgentZh 运行时脚本。"""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,6 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCALE = ROOT / "locales" / "zh-CN.json"
 RUNTIME = ROOT / "src" / "runtime.js"
 OUT = ROOT / "agent-zh.js"
-LEGACY_OUT = ROOT / "cursor-zh.js"
 
 
 def js_object(d: dict[str, str]) -> str:
@@ -106,24 +105,23 @@ def render() -> tuple[str, int, int, int]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="fail if generated scripts are stale")
+    parser.add_argument("--check", action="store_true", help="检查生成脚本是否与词典和运行时模板一致")
     args = parser.parse_args()
     try:
         tpl, phrase_count, short_count, pattern_count = render()
     except (KeyError, ValueError, json.JSONDecodeError) as error:
-        print(f"build failed: {error}", file=sys.stderr)
+        print(f"构建失败：{error}", file=sys.stderr)
         return 1
     if args.check:
-        if any(not p.is_file() or p.read_text(encoding="utf-8") != tpl for p in (OUT, LEGACY_OUT)):
-            print("generated script is stale; run python scripts/build_js.py", file=sys.stderr)
+        if not OUT.is_file() or OUT.read_text(encoding="utf-8") != tpl:
+            print("生成脚本已过期；请运行 python scripts/build_js.py", file=sys.stderr)
             return 1
-        print("agent-zh.js and cursor-zh.js are up to date")
+        print("agent-zh.js 已是最新版本")
         return 0
     OUT.write_bytes(tpl.encode("utf-8"))
-    LEGACY_OUT.write_bytes(tpl.encode("utf-8"))
     print(
-        f"wrote {OUT} ({OUT.stat().st_size} bytes, "
-        f"phrase={phrase_count}, short={short_count}, patterns={pattern_count})"
+        f"已生成 {OUT}（{OUT.stat().st_size} 字节，"
+        f"长文本={phrase_count}，短文本={short_count}，模式={pattern_count}）"
     )
     return 0
 
