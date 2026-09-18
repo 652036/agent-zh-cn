@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# One primary implementation; the native fallback remains usable without Python.
+# 主实现优先使用 Python；未安装 Python 时使用 PowerShell 原生实现。
 if (-not $Native) {
     $pythonCommand = $null
     $pythonPrefix = @()
@@ -43,7 +43,8 @@ $EntryPaths = @('out/vs/code/electron-sandbox/workbench/workbench.html',
     'out/vs/code/electron-browser/workbench/workbench.html',
     'out/vs/sessions/electron-browser/sessions.html','out/vs/sessions/electron-sandbox/sessions.html')
 $Tag = '<script src="./agent-zh.js"></script>'
-$LegacyTag = '<script src="./cursor-zh.js"></script>'
+# 仅用于清理由早期 CursorZh 版本留下的旧注入，不再作为发布产物。
+$OldCursorTag = '<script src="./cursor-zh.js"></script>'
 $BackupBase = Join-Path $env:APPDATA 'AgentZh/backup'
 
 function Read-Json([string]$File) {
@@ -160,7 +161,7 @@ function Find-Installations {
     }
 }
 function Remove-ZhTag([string]$Text) {
-    foreach ($t in @($Tag,$LegacyTag)) {
+    foreach ($t in @($Tag,$OldCursorTag)) {
         foreach ($prefix in @("`r`n`t","`n`t","`r`n","`n",'')) { $Text=$Text.Replace($prefix+$t,'') }
     }
     return $Text
@@ -336,7 +337,7 @@ try {
             foreach ($rel in $target.Entries) {
                 $entry=Join-Path $target.Root $rel; $raw=[IO.File]::ReadAllText($entry)
                 $installed=$raw.Contains($Tag) -and (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $entry) 'agent-zh.js'))
-                Write-Host "  $rel 已安装=$installed"
+                Write-Host "  $rel 已安装=$(if ($installed) { '是' } else { '否' })"
             }
         }; exit 0
     }
@@ -364,11 +365,11 @@ try {
                 $htmls[$rel]=$Utf8.GetBytes((Inject-Html $raw))
                 $writes[$entry]=$htmls[$rel]
                 $writes[(Join-Path $parent 'agent-zh.js')]=[IO.File]::ReadAllBytes((Join-Path $Here 'agent-zh.js'))
-                if ($raw.Contains($LegacyTag)) { $writes[(Join-Path $parent 'cursor-zh.js')]=$null }
-            } elseif ($raw.Contains($Tag) -or $raw.Contains($LegacyTag)) {
+                if ($raw.Contains($OldCursorTag)) { $writes[(Join-Path $parent 'cursor-zh.js')]=$null }
+            } elseif ($raw.Contains($Tag) -or $raw.Contains($OldCursorTag)) {
                 $htmls[$rel]=$Utf8.GetBytes((Remove-ZhTag $raw)); $writes[$entry]=$htmls[$rel]
                 if ($raw.Contains($Tag)) { $writes[(Join-Path $parent 'agent-zh.js')]=$null }
-                if ($raw.Contains($LegacyTag)) { $writes[(Join-Path $parent 'cursor-zh.js')]=$null }
+                if ($raw.Contains($OldCursorTag)) { $writes[(Join-Path $parent 'cursor-zh.js')]=$null }
             }
         }
         if ($htmls.Count) {
@@ -397,7 +398,13 @@ try {
             }
         }
         Commit-Writes $writes
-        Write-Host "$($target.Profile.name)：$Cmd 完成。"
+        $cmdLabel = switch ($Cmd) {
+            'apply'  { '应用汉化' }
+            'revert' { '移除汉化' }
+            'status' { '查看状态' }
+            'list'   { '列出软件' }
+        }
+        Write-Host "$($target.Profile.name)：$cmdLabel 完成。"
         if ($Restart) {
             $exe=Join-Path $target.Install ($processName+'.exe')
             if (Test-Path -LiteralPath $exe) { Start-Process -FilePath $exe -WindowStyle Normal }
