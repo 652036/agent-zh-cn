@@ -32,6 +32,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: 运行单元测试
         run: python -m unittest discover -s tests -v
+      - name: 检查本地化质量
+        run: python scripts/check_locale_quality.py
       - name: 检查生成词典
         run: python scripts/build_js.py --check
       - name: 检查 JavaScript 语法
