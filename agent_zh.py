@@ -1,4 +1,4 @@
-"""Agent 汉化: reversible UI localization for supported VS Code desktop apps."""
+"""AgentZh：为受支持的 VS Code 系桌面应用提供可逆的简体中文本地化。"""
 from __future__ import annotations
 
 import argparse
@@ -15,12 +15,12 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 HERE = Path(__file__).resolve().parent
 PROFILES = json.loads((HERE / "src/apps.json").read_text(encoding="utf-8"))
 DICT_SRC = HERE / "agent-zh.js"
 SCRIPT_TAG = b'<script src="./agent-zh.js"></script>'
-LEGACY_TAG = b'<script src="./cursor-zh.js"></script>'
+OLD_CURSOR_TAG = b'<script src="./cursor-zh.js"></script>'
 ENTRYPOINTS = (
     "out/vs/code/electron-sandbox/workbench/workbench.html",
     "out/vs/code/electron-browser/workbench/workbench.html",
@@ -30,7 +30,21 @@ ENTRYPOINTS = (
 
 
 class AgentZhError(RuntimeError):
-    """A recoverable error with a user-facing explanation."""
+    """可恢复、可直接展示给用户的安装器错误。"""
+
+
+class ChineseArgumentParser(argparse.ArgumentParser):
+    """使用中文标题和错误前缀的命令行解析器。"""
+
+    def format_usage(self) -> str:
+        return super().format_usage().replace("usage:", "用法：", 1)
+
+    def format_help(self) -> str:
+        return super().format_help().replace("usage:", "用法：", 1)
+
+    def error(self, message: str) -> None:
+        self.print_usage(sys.stderr)
+        self.exit(2, f"参数错误：{message}\n")
 
 
 def read_json(path: Path) -> dict:
@@ -287,7 +301,7 @@ def commit_writes(writes: dict[Path, bytes | None]) -> None:
 
 
 def strip_html(raw: bytes) -> bytes:
-    for tag in (SCRIPT_TAG, LEGACY_TAG):
+    for tag in (SCRIPT_TAG, OLD_CURSOR_TAG):
         for prefix in (b"\r\n\t", b"\n\t", b"\r\n", b"\n", b""):
             raw = raw.replace(prefix + tag, b"")
     return raw
@@ -596,9 +610,9 @@ def apply(app: Installation, *, do_kill: bool = False, do_restart: bool = False,
         entry = app.root / relative
         writes[entry] = html
         # Remove only the old project's exact known artifact after migration.
-        legacy = entry.parent / "cursor-zh.js"
-        if LEGACY_TAG in entry.read_bytes() and legacy.is_file():
-            writes[legacy] = None
+        old_cursor_runtime = entry.parent / "cursor-zh.js"
+        if OLD_CURSOR_TAG in entry.read_bytes() and old_cursor_runtime.is_file():
+            writes[old_cursor_runtime] = None
     writes[product_path] = product_with_checksums(product_path.read_bytes(), htmls)
     if install_pack:
         install_ms_pack(app)
@@ -623,7 +637,7 @@ def revert(app: Installation, *, do_kill: bool = False, do_restart: bool = False
         if raw != clean:
             writes[entry] = clean
             htmls[entry.relative_to(app.root).as_posix()] = clean
-            for name, tag in (("agent-zh.js", SCRIPT_TAG), ("cursor-zh.js", LEGACY_TAG)):
+            for name, tag in (("agent-zh.js", SCRIPT_TAG), ("cursor-zh.js", OLD_CURSOR_TAG)):
                 if tag in raw:
                     writes[entry.parent / name] = None
     if htmls:
@@ -661,7 +675,7 @@ def status(app: Installation) -> dict:
         installed = SCRIPT_TAG in html and dictionary.is_file()
         entries.append({"path": relative, "installed": installed,
                         "runtimeCurrent": installed and dictionary.read_bytes() == DICT_SRC.read_bytes(),
-                        "legacyInstalled": LEGACY_TAG in html,
+                        "oldCursorResidue": OLD_CURSOR_TAG in html,
                         "checksum": "untracked" if expected is None else "ok" if expected == vscode_checksum(html) else "mismatch"})
     return {"app": app.app_id, "name": app.name, "version": app.version,
             "path": str(app.root), "entries": entries, "backup": str(backup_root()),
@@ -688,8 +702,14 @@ def select_installations(args) -> list[Installation]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Agent 汉化：Devin / Cursor / Windsurf / VS Code")
-    parser.add_argument("cmd", nargs="?", default="apply", choices=["apply", "revert", "status", "list"])
+    parser = ChineseArgumentParser(
+        description="AgentZh：Devin / Cursor / Windsurf / Visual Studio Code 简体中文补充翻译",
+        add_help=False,
+    )
+    parser._positionals.title = "位置参数"
+    parser._optionals.title = "选项"
+    parser.add_argument("-h", "--help", action="help", help="显示此帮助信息并退出")
+    parser.add_argument("cmd", nargs="?", default="apply", choices=["apply", "revert", "status", "list"], help="操作：apply 应用、revert 移除、status 状态、list 列表")
     parser.add_argument("--app", choices=list(PROFILES), help="选择目标软件")
     parser.add_argument("--path", help="可执行文件、安装目录或 resources/app")
     parser.add_argument("--all", action="store_true", help="明确对全部检测到的软件操作")
@@ -717,7 +737,14 @@ def main(argv: list[str] | None = None) -> int:
                           f"{'已安装' if row['installed'] else '未安装'} | {row['path']}")
                     if args.cmd == "status":
                         for entry in row["entries"]:
-                            print(f"  {entry['path']}: 注入={entry['installed']} 词典最新={entry['runtimeCurrent']} 校验={entry['checksum']}")
+                            checksum_label = {"ok": "正常", "mismatch": "不匹配", "untracked": "未跟踪"}[entry["checksum"]]
+                            old_cursor = " 有旧 CursorZh 残留" if entry["oldCursorResidue"] else ""
+                            print(
+                                f"  {entry['path']}: "
+                                f"注入={'是' if entry['installed'] else '否'} "
+                                f"词典最新={'是' if entry['runtimeCurrent'] else '否'} "
+                                f"校验={checksum_label}{old_cursor}"
+                            )
             return 0
         for app in apps:
             if args.cmd == "apply":
