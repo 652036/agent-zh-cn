@@ -81,10 +81,10 @@ class MultiAppTests(unittest.TestCase):
         app = self.fixture("cursor")
         file = app.entrypoints[0]
         original = file.read_bytes()
-        file.write_bytes(original.replace(b'</html>', b'\n\t' + agent.LEGACY_TAG + b'</html>'))
+        file.write_bytes(original.replace(b'</html>', b'\n\t' + agent.OLD_CURSOR_TAG + b'</html>'))
         (file.parent / "cursor-zh.js").write_text("legacy", encoding="utf-8")
         agent.apply(app, install_pack=False)
-        self.assertNotIn(agent.LEGACY_TAG, file.read_bytes())
+        self.assertNotIn(agent.OLD_CURSOR_TAG, file.read_bytes())
         self.assertEqual(file.read_bytes().count(agent.SCRIPT_TAG), 1)
         self.assertFalse((file.parent / "cursor-zh.js").exists())
 
