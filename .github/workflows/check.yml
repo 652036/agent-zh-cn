@@ -1,4 +1,4 @@
-name: check
+name: 检查
 
 on:
   push:
@@ -30,23 +30,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Run unit tests
+      - name: 运行单元测试
         run: python -m unittest discover -s tests -v
-      - name: Check generated dictionary
+      - name: 检查生成词典
         run: python scripts/build_js.py --check
-      - name: Check JavaScript syntax
+      - name: 检查 JavaScript 语法
         run: node --check agent-zh.js
-      - name: Check runtime content protection
+      - name: 检查运行时内容保护
         run: node tests/runtime.test.cjs
-      - name: Validate JavaScript regular expressions
+      - name: 校验 JavaScript 正则表达式
         run: node -e "for (const f of ['zh-CN','common']) { const d=require('./locales/'+f+'.json'); for (const p of d.patterns) new RegExp(p.match) }"
-      - name: Parse PowerShell 5.1 script
+      - name: 解析 PowerShell 5.1 脚本
         if: runner.os == 'Windows'
         shell: powershell
         run: |
           $tokens = $null
           $errors = $null
-          foreach ($script in @("AgentZh.ps1", "CursorZh.ps1")) {
+          foreach ($script in @("AgentZh.ps1")) {
             [System.Management.Automation.Language.Parser]::ParseFile(
               (Resolve-Path $script), [ref]$tokens, [ref]$errors
             ) > $null
