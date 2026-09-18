@@ -1,4 +1,4 @@
-"""Find likely user-visible application strings missing from the zh-CN dictionary."""
+"""查找目标应用中可能尚未收录到简体中文词典的用户可见文案。"""
 from __future__ import annotations
 
 import argparse
@@ -129,8 +129,8 @@ def resolve_app(value: str | None, app_id: str | None = None) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--app", choices=list(agent_zh.PROFILES))
-    parser.add_argument("--path", "--cursor-app", dest="app_path", help="Executable or resources/app directory")
-    parser.add_argument("--output", type=Path, help="write JSON report to this file")
+    parser.add_argument("--path", "--cursor-app", dest="app_path", help="可执行文件或 resources/app 目录")
+    parser.add_argument("--output", type=Path, help="将 JSON 报告写入此文件")
     parser.add_argument("--include-low-priority", action="store_true")
     args = parser.parse_args()
 
@@ -167,7 +167,7 @@ def main() -> int:
     output = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.write_text(output, encoding="utf-8")
-        print(f"wrote {args.output} ({len(report)} candidates)")
+        print(f"已写入 {args.output}（{len(report)} 个候选项）")
     else:
         try:
             print(output, end="")

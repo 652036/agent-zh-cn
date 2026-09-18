@@ -23,10 +23,10 @@ agent-zh-cn 接受译文修正、漏翻补充、安装器修复和软件适配�
 | `locales/devin-nls.json` | Devin 本地化语言资源的补充译文 |
 | `scripts/build_js.py` | 合并界面词典并生成运行时脚本 |
 | `scripts/scan_app_strings.py` | 从已安装软件中提取候选界面文案 |
-| `agent-zh.js`、`cursor-zh.js` | 生成的运行时脚本和 Cursor 兼容副本 |
+| `agent-zh.js` | 由词典和运行时模板生成的浏览器端翻译脚本 |
 | `tests/` | 安装器样本、回滚、配置保留和运行时保护测试 |
 
-`locales/devin-nls.json` 由安装器用于补充语言资源，不直接打包到 DOM 运行时词典。不要直接编辑 `agent-zh.js` 或 `cursor-zh.js`。
+`locales/devin-nls.json` 由安装器用于补充语言资源，不直接打包到 DOM 运行时词典。不要直接编辑 `agent-zh.js`；应修改词典或 `src/runtime.js` 后重新生成。
 
 ## 修改翻译
 
