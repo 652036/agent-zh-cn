@@ -12,7 +12,7 @@
 | 软件 | 命令行标识 | 适配内容 |
 | --- | --- | --- |
 | Devin | `devin` | 编辑器、独立智能体窗口，以及缺失的本地化语言资源 |
-| Cursor | `cursor` | 编辑器工作台和专有界面，兼容旧版 Cursor 补充翻译入口 |
+| Cursor | `cursor` | 编辑器工作台和专有界面 |
 | Windsurf | `windsurf` | 编辑器工作台及共用智能体界面文案 |
 | Visual Studio Code | `vscode` | 中文语言包配置，以及可识别的工作台、独立会话窗口 |
 
@@ -96,7 +96,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\AgentZh.ps1 -Cmd apply -Ap
 powershell -NoProfile -ExecutionPolicy Bypass -File .\AgentZh.ps1 -Cmd status -App devin -Native
 ```
 
-`-Native` 强制使用无 Python 依赖的实现。旧 `cursor_zh.py`、`CursorZh.ps1` 和 `scripts/scan_cursor_strings.py` 保留为 Cursor 兼容入口。
+`-Native` 强制使用无 Python 依赖的实现。仓库统一使用 `AgentZh.ps1` 和 `agent_zh.py` 作为安装入口。
 
 ## 更新与移除
 
