@@ -24,18 +24,21 @@ CI 在 Windows、macOS 和 Linux 上检查安装样本、移除、故障回滚�
 
 ### Windows
 
-1. [下载源码 ZIP](https://github.com/652036/agent-zh-cn/archive/refs/heads/main.zip) 并完整解压，或克隆仓库：
+推荐从 [Releases](https://github.com/652036/agent-zh-cn/releases/latest) 获取正式版本：
 
-   ```sh
-   git clone https://github.com/652036/agent-zh-cn.git
-   cd agent-zh-cn
-   ```
+1. **单文件在线安装**：下载 `AgentZh-Installer.bat` 并双击运行。安装器会获取最新的 `AgentZh-Windows.zip` 并启动汉化。
+2. **完整包**：下载 `AgentZh-Windows.zip`，完整解压后双击 `一键汉化.bat`。
+3. 操作前请保存目标软件中尚未保存的工作；脚本会关闭所选软件、应用翻译并重新启动。
+4. 如需校验下载文件，可使用 Release 中的 `SHA256SUMS.txt`。
 
-2. 保存目标软件中尚未保存的工作。
-3. 双击 `一键汉化.bat`。检测到多个安装时，按提示选择目标；仅检测到一个时直接使用该目标。
-4. 脚本会关闭所选软件、应用翻译并重新启动。
+Windows 不强制要求 Python：检测到 Python 3 时优先使用 Python 实现，未检测到时自动使用 Windows PowerShell 5.1 原生实现。完整包请保留解压后的目录结构，安装器需要同目录下的词典和适配文件。
 
-脚本优先调用 Python；使用 Python 时需要 3.10 或更高版本。未找到 Python 时，脚本使用 Windows PowerShell 5.1 原生实现。请保留解压后的目录结构，安装器需要同目录下的词典和适配文件。
+开发者也可以克隆仓库：
+
+```sh
+git clone https://github.com/652036/agent-zh-cn.git
+cd agent-zh-cn
+```
 
 ### macOS / Linux
 
