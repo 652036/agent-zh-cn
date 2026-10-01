@@ -35,7 +35,7 @@ class MultiAppTests(unittest.TestCase):
         for i, rel in enumerate(layouts):
             file = root / rel
             file.parent.mkdir(parents=True, exist_ok=True)
-            startup = "sessions" if file.name == "sessions.html" else "workbench"
+            startup = "jetskiAgent" if file.name == "workbench-jetski-agent.html" else "sessions" if file.name == "sessions.html" else "workbench"
             text = f'<html>\r\n<body data-version="{i}"></body>\r\n<script type="module" src="./{startup}.js"></script>\r\n</html>'
             file.write_bytes(text.encode())
             checksums[rel[4:]] = agent.vscode_checksum(file.read_bytes())
@@ -76,6 +76,65 @@ class MultiAppTests(unittest.TestCase):
                 self.assertEqual(originals, {p: p.read_bytes() for p in originals})
                 self.assertEqual(other.read_bytes(), b'const filename="New Space";')
                 self.assertEqual(agent.parse_jsonc(app.argv.read_text("utf-8"))["locale"], "zh-cn")
+
+    def test_antigravity_manager_apply_and_revert_with_language_resources(self):
+        app = self.fixture("antigravity", agent.PROFILES["antigravity"]["entrypoints"][::2])
+        originals = {p: p.read_bytes() for p in [*app.entrypoints, app.root / "product.json"]}
+        official = self.fake_pack(app)
+        official_bytes = official.read_bytes()
+        metadata = agent.read_json(app.root / "out/nls.metadata.json")
+        metadata["messages"]["custom"] = ["Always Proceed"]
+        (app.root / "out/nls.metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
+        agent.apply(app, install_pack=False)
+        installed = {p: p.read_bytes() for p in originals}
+        self.assertEqual(len(app.entrypoints), 2)
+        self.assertTrue(all(p.read_bytes().count(agent.SCRIPT_TAG) == 1 for p in app.entrypoints))
+        self.assertTrue(all(e["checksum"] == "ok" for e in agent.status(app)["entries"]))
+        merged = agent.read_json(app.user_data / "AgentZh/main.i18n.json")
+        self.assertEqual(merged["contents"]["custom"]["new"], "始终继续")
+        self.assertEqual(official.read_bytes(), official_bytes)
+        agent.apply(app, install_pack=False)
+        self.assertEqual(installed, {p: p.read_bytes() for p in originals})
+        agent.revert(app)
+        self.assertEqual(originals, {p: p.read_bytes() for p in originals})
+        self.assertFalse((app.entrypoints[0].parent / "agent-zh.js").exists())
+
+    def test_antigravity_product_variant_selects_its_own_configuration(self):
+        app = self.fixture("antigravity")
+        legacy = agent.identify(app.root, "antigravity")
+        self.assertEqual(legacy.argv, self.base / "home/.antigravity/argv.json")
+        self.assertEqual(legacy.user_data, self.base / "config/Antigravity")
+        product = agent.read_json(app.root / "product.json")
+        product["applicationName"] = "antigravity-ide"
+        product["ideVersion"] = "2.5.5"
+        (app.root / "product.json").write_text(json.dumps(product), encoding="utf-8")
+        current = agent.discover("antigravity", str(app.root))[0]
+        self.assertEqual(current.version, "2.5.5")
+        self.assertEqual(current.argv, self.base / "home/.antigravity-ide/argv.json")
+        self.assertEqual(current.extensions, self.base / "home/.antigravity-ide/extensions")
+        self.assertEqual(current.user_data, self.base / "config/Antigravity IDE")
+        agent.apply(current, install_pack=False)
+        self.assertFalse((self.base / "home/.antigravity/argv.json").exists())
+        self.assertFalse((self.base / "config/Antigravity").exists())
+
+    def test_antigravity_manager_entry_is_limited_to_its_profile(self):
+        manager = agent.PROFILES["antigravity"]["entrypoints"][-1]
+        app = self.fixture("cursor", [agent.ENTRYPOINTS[0], manager])
+        excluded = app.root / manager
+        original = excluded.read_bytes()
+        agent.apply(app, install_pack=False)
+        self.assertEqual(excluded.read_bytes(), original)
+        self.assertNotIn(excluded, app.entrypoints)
+        product = agent.read_json(app.root / "product.json")
+        product["applicationName"] = "antigravity-hub"
+        (app.root / "product.json").write_text(json.dumps(product), encoding="utf-8")
+        self.assertIsNone(agent.identify(app.root, "antigravity"))
+
+    def test_antigravity_mac_discovery_checks_both_bundle_names(self):
+        with mock.patch.object(agent.sys, "platform", "darwin"):
+            roots = agent.candidates("antigravity")
+        self.assertIn(Path("/Applications/Antigravity.app/Contents/Resources/app"), roots)
+        self.assertIn(Path("/Applications/Antigravity IDE.app/Contents/Resources/app"), roots)
 
     def test_migrate_cursor_old_tag_without_two_observers(self):
         app = self.fixture("cursor")
@@ -269,6 +328,62 @@ class ConfigTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform == "win32" and shutil.which("powershell"), "Windows PowerShell fixture")
 class NativePowerShellTests(unittest.TestCase):
+    def test_native_antigravity_variants_and_manager_window(self):
+        for application_name, user_data, data_folder in (
+            ("antigravity", "Antigravity", ".antigravity"),
+            ("antigravity-ide", "Antigravity IDE", ".antigravity-ide"),
+        ):
+            with self.subTest(application=application_name), tempfile.TemporaryDirectory() as directory:
+                base = Path(directory)
+                tool = base / "tool"
+                (tool / "src").mkdir(parents=True)
+                (tool / "locales").mkdir()
+                for name in ("AgentZh.ps1", "agent-zh.js"):
+                    shutil.copy2(agent.HERE / name, tool / name)
+                for name in ("zh-CN.json", "common.json", "antigravity.json"):
+                    shutil.copy2(agent.HERE / "locales" / name, tool / "locales" / name)
+                profiles = json.loads(json.dumps(agent.PROFILES))
+                profiles["antigravity"]["executables"] = ["AgentZhTestFixture.exe"]
+                for variant in profiles["antigravity"]["variants"].values():
+                    variant["executables"] = ["AgentZhTestFixture.exe"]
+                (tool / "src/apps.json").write_text(json.dumps(profiles), encoding="utf-8")
+                root = base / "install/resources/app"
+                root.mkdir(parents=True)
+                original, sums = {}, {}
+                for rel in profiles["antigravity"]["entrypoints"][::2]:
+                    file = root / rel
+                    file.parent.mkdir(parents=True, exist_ok=True)
+                    startup = "jetskiAgent" if file.name == "workbench-jetski-agent.html" else "workbench"
+                    data = f'<html>\r\n<script src="./{startup}.js" type="module"></script>\r\n</html>'.encode()
+                    file.write_bytes(data)
+                    original[file] = data
+                    sums[rel[4:]] = agent.vscode_checksum(data)
+                (root / "product.json").write_text(json.dumps({"applicationName": application_name, "checksums": sums}), encoding="utf-8")
+                (root / "package.json").write_text('{"version":"1.107.0"}', encoding="utf-8")
+                original[root / "product.json"] = (root / "product.json").read_bytes()
+                pack = base / "home" / data_folder / "extensions/ms-ceintl.vscode-language-pack-zh-hans-1.2.3-universal"
+                pack.mkdir(parents=True)
+                (pack / "package.json").write_text(json.dumps({"version": "1.2.3", "contributes": {"localizations": [{
+                    "languageId": "zh-cn", "translations": [{"id": "vscode", "path": "main.json"}]}]}}), encoding="utf-8")
+                (pack / "main.json").write_text('{"contents":{}}', encoding="utf-8")
+                (root / "out/nls.metadata.json").write_text(json.dumps({"keys": {"custom": ["policy"]},
+                    "messages": {"custom": ["Always Proceed"]}}), encoding="utf-8")
+                env = dict(os.environ, APPDATA=str(base / "config"), USERPROFILE=str(base / "home"))
+                common = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(tool / "AgentZh.ps1"),
+                          "-Native", "-App", "antigravity", "-Path", str(root), "-NoLangpack"]
+                for cmd in ("apply", "apply", "revert"):
+                    result = subprocess.run([*common, "-Cmd", cmd], env=env, capture_output=True, timeout=40)
+                    self.assertEqual(result.returncode, 0, result.stdout.decode(errors="replace") + result.stderr.decode(errors="replace"))
+                    if cmd == "apply":
+                        for file in original:
+                            if file.suffix == ".html":
+                                self.assertEqual(file.read_bytes().count(agent.SCRIPT_TAG), 1)
+                        merged = json.loads((base / "config" / user_data / "AgentZh/main.i18n.json").read_text("utf-8"))
+                        self.assertEqual(merged["contents"]["custom"]["policy"], "始终继续")
+                        self.assertEqual(agent.parse_jsonc((base / "home" / data_folder / "argv.json").read_text())["locale"], "zh-cn")
+                self.assertEqual(original, {p: p.read_bytes() for p in original})
+                self.assertFalse((next(iter(original)).parent / "agent-zh.js").exists())
+
     def test_native_devin_two_windows_apply_and_revert(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

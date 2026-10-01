@@ -72,18 +72,19 @@ def load_merged_locale() -> tuple[dict[str, str], dict[str, str], list[dict[str,
     # Test callers can provide a standalone fixture without importing production data.
     if LOCALE.resolve() != (ROOT / "locales/zh-CN.json").resolve():
         return phrase, short, patterns
-    extra = ROOT / "locales/common.json"
-    data = json.loads(extra.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
-    for section, destination, other in (("phrase", phrase, short), ("short", short, phrase)):
-        for key, value in data.get(section, {}).items():
-            if not isinstance(key, str) or not isinstance(value, str) or not key or not value:
-                raise ValueError(f"common.{section} entries must be non-empty strings")
-            other.pop(key, None)
-            destination[key] = value
-    for row in data.get("patterns", []):
-        if set(row) != {"match", "replace"} or not all(isinstance(v, str) for v in row.values()):
-            raise ValueError("common patterns must contain match/replace strings")
-        patterns.append(row)
+    for name in ("common", "antigravity"):
+        extra = ROOT / f"locales/{name}.json"
+        data = json.loads(extra.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+        for section, destination, other in (("phrase", phrase, short), ("short", short, phrase)):
+            for key, value in data.get(section, {}).items():
+                if not isinstance(key, str) or not isinstance(value, str) or not key or not value:
+                    raise ValueError(f"{name}.{section} entries must be non-empty strings")
+                other.pop(key, None)
+                destination[key] = value
+        for row in data.get("patterns", []):
+            if set(row) != {"match", "replace"} or not all(isinstance(v, str) for v in row.values()):
+                raise ValueError(f"{name} patterns must contain match/replace strings")
+            patterns.append(row)
     return phrase, short, patterns
 
 

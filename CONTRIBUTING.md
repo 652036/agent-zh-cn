@@ -20,6 +20,7 @@ agent-zh-cn 接受译文修正、漏翻补充、安装器修复和软件适配�
 | `src/runtime.js` | 界面翻译、动态节点处理和用户内容保护 |
 | `locales/zh-CN.json` | Cursor 补充词典 |
 | `locales/common.json` | 共用界面词典和动态文案规则 |
+| `locales/antigravity.json` | Antigravity IDE 设置与智能体窗口补充词典 |
 | `locales/devin-nls.json` | Devin 本地化语言资源的补充译文 |
 | `scripts/build_js.py` | 合并界面词典并生成运行时脚本 |
 | `scripts/scan_app_strings.py` | 从已安装软件中提取候选界面文案 |
@@ -31,8 +32,8 @@ agent-zh-cn 接受译文修正、漏翻补充、安装器修复和软件适配�
 ## 修改翻译
 
 1. 在目标软件中确认文案位置及完整原文。
-2. 根据来源修改 Cursor 词典、共用词典或 Devin 语言资源词典。
-3. 修改 DOM 词典或运行时源码后，运行 `python scripts/build_js.py`，同步两个生成文件。
+2. 根据来源修改 Cursor 词典、共用词典、Antigravity 词典或 Devin 语言资源词典。
+3. 修改 DOM 词典或运行时源码后，运行 `python scripts/build_js.py`，同步 `agent-zh.js`。
 4. 执行相关检查，并在目标软件中验证译文和相邻的用户内容。
 
 DOM 词典分为三个字段：
@@ -41,7 +42,7 @@ DOM 词典分为三个字段：
 - `short`：按钮、菜单等控件中的短标签，匹配范围比普通文本小。
 - `patterns`：包含变量的提示，使用 JavaScript 正则表达式和 `$1` 等捕获组替换语法。
 
-`locales/common.json` 的同名条目会覆盖 Cursor 词典中的条目。合并后同一键只保留在一个文本字段中。正则应锚定预期提示，不能扩展为任意文本替换。
+生成脚本依次合并 Cursor、`locales/common.json` 和 `locales/antigravity.json`；后合并的同名条目覆盖前面的译文。合并后同一键只保留在一个文本字段中。正则应锚定预期提示，不能扩展为任意文本替换。
 
 译文使用简体中文，并沿用软件已有的术语。保留产品名、模型名、命令 ID、路径、URL、快捷键和插值参数，例如 `{0}`、`$1`。同一 JSON 对象中不得重复定义键。
 
@@ -57,7 +58,7 @@ python scripts/scan_app_strings.py --app devin --output missing.json
 
 ## 修改安装器与添加软件适配
 
-适配器必须定义明确的软件身份及有限的已知窗口入口。新布局、便携配置、活动版本子目录、额外会话窗口和专有语言资源，应分别提供对应的测试样本。
+适配器必须定义明确的软件身份及有限的已知窗口入口。`src/apps.json` 可使用 `entrypoints` 指定该软件特有的入口，使用 `variants` 按 `applicationName` 区分同系列软件的配置目录、可执行文件、CLI 和产品版本字段；macOS 多个应用包名称通过 `macBundles` 指定。新布局、便携配置、活动版本子目录、额外会话窗口和专有语言资源，应分别提供对应的测试样本。
 
 应用资源和用户配置的写入应纳入故障回滚；备份应区分软件身份、路径、版本、缺失文件和空文件。移除按当前资源处理，避免将升级后的应用替换为历史备份。
 
@@ -83,7 +84,7 @@ node tests/runtime.test.cjs
 git diff --check
 ```
 
-Windows 还需检查两个 PowerShell 入口的 5.1 语法兼容性及原生安装器样本。纯文档改动核对命令、链接和格式即可。
+Windows 还需检查 `AgentZh.ps1` 的 5.1 语法兼容性及原生安装器样本。纯文档改动核对命令、链接和格式即可。
 
 CI 使用临时安装样本检查资源写入和回滚，运行时测试检查界面文本和用户内容的处理。实际软件的界面验证应另行记录操作系统、软件版本和检查的页面，不能用 CI 结果代替。
 

@@ -40,7 +40,7 @@ jobs:
 
           Copy-Item AgentZh.ps1,agent_zh.py,agent-zh.js,AgentZh-Installer.bat,一键汉化.bat,取消汉化.bat,README.md,LICENSE $root
           Copy-Item src/apps.json (Join-Path $root "src/apps.json")
-          Copy-Item locales/zh-CN.json,locales/common.json,locales/devin-nls.json (Join-Path $root "locales")
+          Copy-Item locales/zh-CN.json,locales/common.json,locales/antigravity.json,locales/devin-nls.json (Join-Path $root "locales")
 
           Compress-Archive -Path "$root/*" -DestinationPath "AgentZh-Windows.zip" -CompressionLevel Optimal -Force
 

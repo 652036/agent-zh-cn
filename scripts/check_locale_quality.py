@@ -46,7 +46,7 @@ def load(path: Path):
 
 def translation_items(path: Path):
     data = load(path)
-    if path.name in {"zh-CN.json", "common.json"}:
+    if path.name in {"zh-CN.json", "common.json", "antigravity.json"}:
         for section in ("phrase", "short"):
             for key, value in data.get(section, {}).items():
                 yield key, value
@@ -65,7 +65,7 @@ def is_untranslated(value: str) -> bool:
 def main() -> int:
     errors = []
     tables = {}
-    for name in ("zh-CN.json", "common.json", "devin-nls.json"):
+    for name in ("zh-CN.json", "common.json", "antigravity.json", "devin-nls.json"):
         path = LOCALES / name
         rows = dict(translation_items(path))
         tables[name] = rows

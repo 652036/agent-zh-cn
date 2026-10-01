@@ -36,6 +36,8 @@ const text = (parent, value) => parent.append({nodeType: 3, nodeValue: value, is
 const html = new Element('html'), body = element(html, 'body');
 const header = element(body, 'header');
 const agentLabel = text(element(header, 'button'), 'Agent');
+const reviewPolicy = text(element(body, 'label'), 'Always Proceed');
+const browserTools = text(element(body, 'button'), 'Enable Browser Tools');
 const spaceLabel = text(element(body, 'h1'), 'New Space');
 const tooltip = element(body, 'button', {title: 'Choose folder…', 'data-command': 'chooseFolder'});
 const tip = text(element(body, 'div'), 'Tip: New space (Ctrl+N)');
@@ -52,7 +54,11 @@ for (const attrs of [
   {'data-message-event-id': 'event-1'},
   ...['prose-main', 'prose-ds', 'prose-ds-inline', 'prose-invert',
       'agent-session-title', 'agent-session-description'].map(value => ({class: value})),
-  {'data-fast-scroll-fallback': ''}
+  {'data-fast-scroll-fallback': ''},
+  {class: 'animate-markdown'},
+  ...['user-input-step', 'pending-user-messages', 'setup-script-output',
+      'sidecar-logs-content', 'terminal-surface', 'project-selector-item',
+      'breadcrumb-segment'].map(value => ({'data-testid': value}))
 ]) {
   const container = element(body, 'div', {...attrs, title: 'New Space', 'aria-label': 'View all'});
   const content = text(element(container, 'span'), 'New Space');
@@ -106,6 +112,8 @@ assert.equal(tooltip.attrs['data-command'], 'chooseFolder');
 assert.equal(tip.nodeValue, '提示：新建空间 (Ctrl+N)');
 assert.equal(prototypeKey.nodeValue, 'constructor');
 assert.equal(code.nodeValue, 'New Space');
+assert.equal(reviewPolicy.nodeValue, '始终继续');
+assert.equal(browserTools.nodeValue, '启用浏览器工具');
 assert.equal(terminal.nodeValue, 'Settings');
 assert.equal(resource.nodeValue, 'Choose a folder');
 assert.equal(chat.nodeValue, 'New Space');

@@ -42,5 +42,32 @@
     "cliNames": ["code"],
     "userData": "Code",
     "dataFolder": ".vscode"
+  },
+  "antigravity": {
+    "name": "Antigravity",
+    "applicationNames": ["antigravity", "antigravity-ide"],
+    "windowsDirs": ["Antigravity", "Antigravity IDE"],
+    "macBundle": "Antigravity",
+    "macBundles": ["Antigravity", "Antigravity IDE"],
+    "linuxDirs": ["antigravity", "Antigravity", "antigravity-ide", "Antigravity IDE"],
+    "executables": ["Antigravity.exe", "Antigravity IDE.exe", "antigravity", "antigravity-ide", "Antigravity"],
+    "cliNames": ["antigravity", "antigravity-ide"],
+    "userData": "Antigravity",
+    "dataFolder": ".antigravity",
+    "entrypoints": ["out/vs/code/electron-browser/workbench/workbench.html", "out/vs/code/electron-sandbox/workbench/workbench.html", "out/vs/code/electron-browser/workbench/workbench-jetski-agent.html"],
+    "variants": {
+      "antigravity": {
+        "executables": ["Antigravity.exe", "antigravity", "Antigravity"],
+        "cliNames": ["antigravity"]
+      },
+      "antigravity-ide": {
+        "name": "Antigravity IDE",
+        "versionField": "ideVersion",
+        "executables": ["Antigravity IDE.exe", "antigravity-ide", "Antigravity IDE"],
+        "cliNames": ["antigravity-ide"],
+        "userData": "Antigravity IDE",
+        "dataFolder": ".antigravity-ide"
+      }
+    }
   }
 }

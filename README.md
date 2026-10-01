@@ -3,7 +3,7 @@
 [![CI](https://github.com/652036/agent-zh-cn/actions/workflows/check.yml/badge.svg)](https://github.com/652036/agent-zh-cn/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-为 Devin、Cursor、Windsurf 和 Visual Studio Code 桌面端补充简体中文界面翻译。
+为 Devin、Cursor、Windsurf、Google Antigravity IDE 和 Visual Studio Code 桌面端补充简体中文界面翻译。
 
 项目包含多应用安装器和界面词典，用于补充官方中文语言包尚未覆盖的设置、智能体窗口、菜单及提示文案。基础编辑器界面使用微软简体中文语言包，补充翻译在本地加载。
 
@@ -14,11 +14,14 @@
 | Devin | `devin` | 编辑器、独立智能体窗口，以及缺失的本地化语言资源 |
 | Cursor | `cursor` | 编辑器工作台和专有界面 |
 | Windsurf | `windsurf` | 编辑器工作台及共用智能体界面文案 |
+| Google Antigravity IDE | `antigravity` | 旧版 Antigravity / 新版 Antigravity IDE 的编辑器、独立智能体窗口及设置文案 |
 | Visual Studio Code | `vscode` | 中文语言包配置，以及可识别的工作台、独立会话窗口 |
 
 安装器根据软件身份和已知窗口入口识别目标。版本号相同不代表所有安装布局都兼容；无法识别时会报告错误。
 
-CI 在 Windows、macOS 和 Linux 上检查安装样本、移除、故障回滚及运行时内容保护。测试通过表示这些检查覆盖的行为正常，不代表每个软件版本都已完成实际界面的逐页验证。Windsurf 尚未完成实际安装验证。
+CI 在 Windows、macOS 和 Linux 上检查安装样本、移除、故障回滚及运行时内容保护。测试通过表示这些检查覆盖的行为正常，不代表每个软件版本都已完成实际界面的逐页验证。Windsurf 尚未完成实际安装验证。Antigravity 已核对官方 Antigravity IDE 2.5.5 Linux 包的软件身份及两个窗口入口，并通过 Python / Windows PowerShell 安装样本回归；实际桌面界面尚未验证。
+
+Antigravity 适配覆盖 [Google Antigravity IDE](https://antigravity.google/download) 的 VS Code 系桌面应用，可识别 `antigravity` 和 `antigravity-ide` 两个应用标识。安装器分别使用 `Antigravity` / `.antigravity` 和 `Antigravity IDE` / `.antigravity-ide` 配置目录。官方另一款 Antigravity 2.0 桌面端及独立 `agy` CLI 不在此适配范围内；遇到未知布局时安装器会停止处理。
 
 ## 安装
 
@@ -73,7 +76,7 @@ python agent_zh.py revert --app devin --kill --restart
 
 | 参数 | 作用 |
 | --- | --- |
-| `--app` | 选择 `devin`、`cursor`、`windsurf` 或 `vscode` |
+| `--app` | 选择 `devin`、`cursor`、`windsurf`、`antigravity` 或 `vscode` |
 | `--path` | 指定可执行文件、安装目录或 `resources/app` 路径 |
 | `--kill` | 允许关闭所选软件；通常应先保存工作 |
 | `--restart` | 操作完成后重新启动所选软件 |
@@ -90,7 +93,15 @@ python agent_zh.py apply --app devin --defer-restart
 
 `--defer-restart` 仅用于 Python 入口的 `apply`，不能与 `--kill`、`--restart` 同用。此模式跳过语言包下载，改动在完全退出并重新打开软件后生效；写入期间请勿新开目标软件窗口。
 
-自定义路径也可使用 `DEVIN_PATH`、`CURSOR_PATH`、`WINDSURF_PATH` 或 `VSCODE_PATH` 环境变量。检测到多个目标时，安装和移除操作会要求选择；非交互调用应使用参数缩小范围，或通过 `--all` 明确选择全部。
+自定义路径也可使用 `DEVIN_PATH`、`CURSOR_PATH`、`WINDSURF_PATH`、`ANTIGRAVITY_PATH` 或 `VSCODE_PATH` 环境变量。检测到多个目标时，安装和移除操作会要求选择；非交互调用应使用参数缩小范围，或通过 `--all` 明确选择全部。
+
+Antigravity 的安装和移除使用同一标识，检测到新旧两个安装时通过 `--path` 选择：
+
+```sh
+python agent_zh.py status --app antigravity
+python agent_zh.py apply --app antigravity --kill --restart
+python agent_zh.py revert --app antigravity --kill --restart
+```
 
 Windows PowerShell 入口支持相同的基本操作：
 

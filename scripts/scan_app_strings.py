@@ -144,6 +144,8 @@ def main() -> int:
         app / "out/vs/sessions/sessions.desktop.main.js",
         app / "out/vs/workbench/windsurf-chat-client/index.js",
         app / "extensions/windsurf/dist/extension.js",
+        app / "out/jetskiAgent/main.js",
+        app / "extensions/antigravity/dist/extension.js",
     ]
     rows = []
     for source in sources:

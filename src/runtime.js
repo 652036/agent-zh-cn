@@ -8,15 +8,17 @@
 
   // Devin's transcript uses these markers for user and model-authored content.
   const DEVIN_CONTENT = "[data-message-event-id], .prose-main, .prose-ds, .prose-ds-inline, .prose-invert, [data-fast-scroll-fallback]";
+  // Antigravity IDE 2.5.5: streamed answers, user messages and local output.
+  const ANTIGRAVITY_CONTENT = ".animate-markdown, [data-testid='user-input-step'], [data-testid='pending-user-messages'], [data-testid='setup-script-output'], [data-testid='sidecar-logs-content'], [data-testid='terminal-surface']";
   const SKIP_TEXT_TAG = new Set(["SCRIPT", "STYLE", "TEXTAREA", "CODE", "PRE", "KBD", "NOSCRIPT"]);
   const SKIP_TEXT_CLOSEST =
-    DEVIN_CONTENT + ", textarea, [contenteditable='true'], [contenteditable=''], [contenteditable='plaintext-only'], [data-message-id], [data-message-content], [data-md-list-item], [data-testid='message-content'], [data-testid='chat-message-content'], .composer-message-codeblock, .ui-markdown__table, .markdown-body, .rendered-markdown, .markdown-content, .chat-markdown-part, .prose, .monaco-editor, .monaco-mouse-cursor-text, .view-lines, .xterm, .terminal, .native-edit-context";
+    DEVIN_CONTENT + ", " + ANTIGRAVITY_CONTENT + ", textarea, [contenteditable='true'], [contenteditable=''], [contenteditable='plaintext-only'], [data-message-id], [data-message-content], [data-md-list-item], [data-testid='message-content'], [data-testid='chat-message-content'], .composer-message-codeblock, .ui-markdown__table, .markdown-body, .rendered-markdown, .markdown-content, .chat-markdown-part, .prose, .monaco-editor, .monaco-mouse-cursor-text, .view-lines, .xterm, .terminal, .native-edit-context";
   const SKIP_ATTR_CLOSEST =
-    DEVIN_CONTENT + ", [data-message-id], [data-message-content], [data-testid='message-content'], [data-testid='chat-message-content'], .composer-message-codeblock, .markdown-body, .rendered-markdown, .markdown-content, .chat-markdown-part, .prose, .monaco-editor, .xterm, .terminal";
+    DEVIN_CONTENT + ", " + ANTIGRAVITY_CONTENT + ", [data-message-id], [data-message-content], [data-testid='message-content'], [data-testid='chat-message-content'], .composer-message-codeblock, .markdown-body, .rendered-markdown, .markdown-content, .chat-markdown-part, .prose, .monaco-editor, .xterm, .terminal";
   const UI_CLOSEST =
     "button, nav, header, footer, h1, h2, h3, h4, label, [role='button'], [role='menuitem'], [role='navigation'], [role='heading'], .action-label, .action-item, .monaco-button, .monaco-text-button, [data-command]";
   const RESOURCE_CLOSEST =
-    ".monaco-icon-label, .tabs-container, .breadcrumbs-control, .explorer-folders-view, .scm-view, .search-view, .agent-session-title, .agent-session-description";
+    ".monaco-icon-label, .tabs-container, .breadcrumbs-control, .explorer-folders-view, .scm-view, .search-view, .agent-session-title, .agent-session-description, [data-testid='project-selector-item'], [data-testid='breadcrumb-segment']";
   const ATTRS = ["placeholder", "title", "aria-label", "aria-placeholder", "alt", "aria-roledescription"];
 
   let queued = false;

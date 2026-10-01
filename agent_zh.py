@@ -78,7 +78,11 @@ class Installation:
 
     @property
     def profile(self) -> dict:
-        return PROFILES[self.app_id]
+        profile = PROFILES[self.app_id]
+        variants = profile.get("variants", {})
+        if variants:
+            return {**profile, **variants.get(self.product.get("applicationName"), {})}
+        return profile
 
     @property
     def name(self) -> str:
@@ -90,11 +94,15 @@ class Installation:
 
     @property
     def version(self) -> str:
+        field = self.profile.get("versionField")
+        if field and self.product.get(field):
+            return str(self.product[field])
         return str(read_json(self.root / "package.json").get("version", "unknown"))
 
     @property
     def entrypoints(self) -> list[Path]:
-        return [self.root / rel for rel in ENTRYPOINTS if (self.root / rel).is_file()]
+        entries = self.profile.get("entrypoints", ENTRYPOINTS)
+        return [self.root / rel for rel in entries if (self.root / rel).is_file()]
 
     @property
     def install_dir(self) -> Path:
@@ -232,8 +240,9 @@ def candidates(app_id: str) -> list[Path]:
         values += [base / name for base in bases for name in profile["windowsDirs"]]
         values += registry_roots(app_id)
     elif sys.platform == "darwin":
-        values += [base / (profile["macBundle"] + ".app") for base in
-                   (Path("/Applications"), Path.home() / "Applications")]
+        values += [base / (bundle + ".app") for base in
+                   (Path("/Applications"), Path.home() / "Applications")
+                   for bundle in profile.get("macBundles", [profile["macBundle"]])]
     else:
         values += [base / name for base in (Path("/usr/share"), Path("/usr/lib"), Path("/opt"),
                    Path.home() / ".local/share") for name in profile["linuxDirs"]]
@@ -309,9 +318,9 @@ def strip_html(raw: bytes) -> bytes:
 
 def inject_html(raw: bytes) -> bytes:
     clean = strip_html(raw)
-    startup = re.search(rb'<script\b[^>]*\bsrc=["\']\./(?:workbench|sessions)\.js["\'][^>]*>\s*</script>', clean)
+    startup = re.search(rb'<script\b[^>]*\bsrc=["\']\./(?:workbench|sessions|jetskiAgent)\.js["\'][^>]*>\s*</script>', clean)
     if not startup:
-        raise AgentZhError("找不到 workbench.js 或 sessions.js 启动标签；该版本尚未适配。")
+        raise AgentZhError("找不到已知窗口启动标签（workbench.js、sessions.js 或 jetskiAgent.js）；该版本尚未适配。")
     newline = b"\r\n" if b"\r\n" in clean else b"\n"
     return clean[:startup.end()] + newline + b"\t" + SCRIPT_TAG + clean[startup.end():]
 
@@ -703,7 +712,7 @@ def select_installations(args) -> list[Installation]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = ChineseArgumentParser(
-        description="AgentZh：Devin / Cursor / Windsurf / Visual Studio Code 简体中文补充翻译",
+        description="AgentZh：" + " / ".join(profile["name"] for profile in PROFILES.values()) + " 简体中文补充翻译",
         add_help=False,
     )
     parser._positionals.title = "位置参数"

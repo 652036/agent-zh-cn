@@ -1,7 +1,7 @@
 ﻿#requires -Version 5.1
 param(
     [ValidateSet('apply','revert','status','list')][string]$Cmd = 'apply',
-    [ValidateSet('cursor','devin','windsurf','vscode')][string]$App,
+    [ValidateSet('cursor','devin','windsurf','antigravity','vscode')][string]$App,
     [string]$Path,
     [switch]$All,
     [switch]$Kill,
@@ -140,7 +140,15 @@ function Find-Installations {
             if (-not (Test-Path -LiteralPath (Join-Path $root 'product.json'))) { continue }
             try { $product=Read-Json (Join-Path $root 'product.json'); $package=Read-Json (Join-Path $root 'package.json') } catch { continue }
             if ($profile.applicationNames -notcontains $product.applicationName) { continue }
-            $entries=@($EntryPaths | Where-Object { Test-Path -LiteralPath (Join-Path $root $_) })
+            $targetProfile=$profile
+            if ($profile.variants -and $profile.variants.PSObject.Properties[$product.applicationName]) {
+                $fields=@{}
+                foreach ($field in $profile.PSObject.Properties) { $fields[$field.Name]=$field.Value }
+                foreach ($field in $profile.variants.PSObject.Properties[$product.applicationName].Value.PSObject.Properties) { $fields[$field.Name]=$field.Value }
+                $targetProfile=[PSCustomObject]$fields
+            }
+            $knownEntries=if ($targetProfile.entrypoints) { $targetProfile.entrypoints } else { $EntryPaths }
+            $entries=@($knownEntries | Where-Object { Test-Path -LiteralPath (Join-Path $root $_) })
             if (-not $entries.Count) { continue }
             $root=[IO.Path]::GetFullPath($root)
             if ($seen.ContainsKey($root)) { continue }; $seen[$root]=$true
@@ -149,14 +157,18 @@ function Find-Installations {
                 $parent=Split-Path -Parent $install
                 foreach ($exe in $profile.executables) { if (Test-Path -LiteralPath (Join-Path $parent $exe) -PathType Leaf) { $install=$parent; break } }
             }
-            $userData=Join-Path $env:APPDATA $profile.userData
-            $extensions=Join-Path $env:USERPROFILE ($profile.dataFolder+'/extensions')
-            $argvFile=Join-Path $env:USERPROFILE ($profile.dataFolder+'/argv.json')
+            $userData=Join-Path $env:APPDATA $targetProfile.userData
+            $extensions=Join-Path $env:USERPROFILE ($targetProfile.dataFolder+'/extensions')
+            $argvFile=Join-Path $env:USERPROFILE ($targetProfile.dataFolder+'/argv.json')
             if (Test-Path -LiteralPath (Join-Path $install 'data') -PathType Container) {
                 $userData=Join-Path $install 'data/user-data'; $extensions=Join-Path $install 'data/extensions'; $argvFile=Join-Path $userData 'argv.json'
             }
-            [PSCustomObject]@{Id=$id; Profile=$profile; Root=$root; Install=$install; Entries=$entries;
-                Version=$package.version; UserData=$userData; Extensions=$extensions; Argv=$argvFile}
+            $version=$package.version
+            if ($targetProfile.versionField -and $product.PSObject.Properties[$targetProfile.versionField].Value) {
+                $version=$product.PSObject.Properties[$targetProfile.versionField].Value
+            }
+            [PSCustomObject]@{Id=$id; Profile=$targetProfile; Root=$root; Install=$install; Entries=$entries;
+                Version=$version; UserData=$userData; Extensions=$extensions; Argv=$argvFile}
         } }
     }
 }
@@ -168,7 +180,7 @@ function Remove-ZhTag([string]$Text) {
 }
 function Inject-Html([string]$Text) {
     $clean=Remove-ZhTag $Text
-    $match=[regex]::Match($clean,'<script\b[^>]*\bsrc=["'']\./(?:workbench|sessions)\.js["''][^>]*>\s*</script>')
+    $match=[regex]::Match($clean,'<script\b[^>]*\bsrc=["'']\./(?:workbench|sessions|jetskiAgent)\.js["''][^>]*>\s*</script>')
     if (-not $match.Success) { throw '未识别该版本的启动脚本，未修改文件。' }
     $nl=if ($clean.Contains("`r`n")) { "`r`n" } else { "`n" }
     return $clean.Insert($match.Index+$match.Length,$nl+"`t"+$Tag)
@@ -251,7 +263,8 @@ function Add-LanguageWrites($Target,$Writes) {
     $pack=Find-Pack $Target
     if (-not $pack) { Write-Warning '未发现简体中文语言包，基础菜单可能仍为英文。'; return }
     $dictionary=New-Object 'Collections.Generic.Dictionary[string,string]'
-    foreach ($name in @('zh-CN.json','common.json')) {
+    foreach ($name in @('zh-CN.json','common.json',($Target.Id+'.json'))) {
+        if (-not (Test-Path -LiteralPath (Join-Path $Here ('locales/'+$name)))) { continue }
         $data=Read-Data (Join-Path $Here ('locales/'+$name))
         foreach ($section in @('phrase','short')) { foreach ($key in $data[$section].Keys) { $dictionary[$key]=$data[$section][$key] } }
     }

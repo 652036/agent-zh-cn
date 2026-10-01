@@ -41,7 +41,7 @@ jobs:
       - name: 检查运行时内容保护
         run: node tests/runtime.test.cjs
       - name: 校验 JavaScript 正则表达式
-        run: node -e "for (const f of ['zh-CN','common']) { const d=require('./locales/'+f+'.json'); for (const p of d.patterns) new RegExp(p.match) }"
+        run: node -e "for (const f of ['zh-CN','common','antigravity']) { const d=require('./locales/'+f+'.json'); for (const p of d.patterns) new RegExp(p.match) }"
       - name: 解析 PowerShell 5.1 脚本
         if: runner.os == 'Windows'
         shell: powershell
